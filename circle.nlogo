@@ -1,21 +1,26 @@
 globals [
 radius
+
+  ;spawn probabilities for each tick
+ north-spawn-prob
+ west-spawn-prob
+ south-spawn-prob
+ east-spawn-prob
 ]
 
 turtles-own [
-  yellow-patches-ran-over
-  exit-number
+  yellow-patches-ran-over ;there are 4 yellow patches at the entrance/exits
+  exit-number ;a number from 1-3 representing the exit
+  spawn-number ; 0 north, 1 west, 2 east, 3 west
 ]
 
 to setup
   clear-all
   set radius 50
-  create-turtles 1 [
-    set color red
-    set shape "car"
-    set size 5
-    set heading 180
-    move-to patch -50 0]
+  set north-spawn-prob 0.01
+  set west-spawn-prob 0.02
+  set south-spawn-prob 0.03
+  set east-spawn-prob 0.04
 
   ;setup procedures
   setup-road
@@ -25,7 +30,8 @@ end
 
 
 to go
-  ask turtles[arc-forward-by-dist 1]
+  spawn-turtles
+  ask turtles[turtle-go]
   tick
 end
 
@@ -48,17 +54,98 @@ to setup-road ;; patch procedure
   ask patch 0 -50 [set pcolor yellow]
   ask patch 50 0 [set pcolor yellow]
   ask patch -50 0 [set pcolor yellow]
-
 end
 
 
-to setup-cars
+to turtle-go ;;a turtle procedure
 
+    (ifelse
+    yellow-patches-ran-over = 0 [ ;on road entering circle
+      fd 1
+
+      ;update yellow patches
+      if pcolor = yellow
+      [set yellow-patches-ran-over (yellow-patches-ran-over + 1)
+      rt 90 ;pivot to get ready to go around the cirlce
+      ]
+
+    ]
+    yellow-patches-ran-over = exit-number + 1 [ ; exiting. we add plus one because the first yellow patch shouldn't count
+      fd 1
+    ]
+    ;;else commands: continue around the circle and check if it's time to exit
+    [
+      arc-forward-by-dist 1
+
+      ;update yellow patches
+      if pcolor = yellow
+      [set yellow-patches-ran-over (yellow-patches-ran-over + 1)]
+
+      ;pivot if reached entrance to circle
+      if yellow-patches-ran-over = exit-number + 1
+      [set heading ( ((exit-number + spawn-number) mod 4) * -90)] ; this calculates the correct heading direction (rt 90 results in small error)
+
+  ])
 end
 
 
-to turtle-go
-
+to spawn-turtles
+;north spawn
+if random-float 1 < north-spawn-prob
+  [
+Create-turtles 1 [
+set yellow-patches-ran-over 0
+set spawn-number 0
+set exit-number (random 3 + 1 ); either 1, 2, or 3
+Set color red
+Set shape "car"
+Set size 5
+Set heading 180
+Move-to patch 0 100
+]
+]
+;west spawn
+if random-float 1 < west-spawn-prob
+  [
+Create-turtles 1 [
+set yellow-patches-ran-over 0
+set spawn-number 1
+set exit-number (random 3 + 1 ); either 1, 2, or 3
+Set color yellow
+Set shape "car"
+Set size 5
+Set heading 90
+Move-to patch -100 0
+]
+]
+;south spawn
+if random-float 1 < south-spawn-prob
+  [
+Create-turtles 1 [
+set yellow-patches-ran-over 0
+set spawn-number 2
+set exit-number (random 3 + 1 ); either 1, 2, or 3
+Set color blue
+Set shape "car"
+Set size 5
+Set heading 0
+Move-to patch 0 -100
+]
+]
+;east spawn
+if random-float 1 < east-spawn-prob
+  [
+Create-turtles 1 [
+set yellow-patches-ran-over 0
+set spawn-number 3
+set exit-number (random 3 + 1 ); either 1, 2, or 3
+Set color violet
+Set shape "car"
+Set size 5
+Set heading 270
+Move-to patch 100 0
+]
+]
 end
 
 
