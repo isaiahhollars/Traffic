@@ -3,7 +3,8 @@ radius
 ]
 
 turtles-own [
-
+  yellow-patches-ran-over
+  exit-number
 ]
 
 to setup
@@ -24,7 +25,7 @@ end
 
 
 to go
-  ask turtles[arc-forward-by-dist 5]
+  ask turtles[arc-forward-by-dist 1]
   tick
 end
 
@@ -42,10 +43,21 @@ to setup-road ;; patch procedure
   ask patches with [pycor = 0 and pxcor <= -50] [set pcolor black]
   ask patches with [pycor = 0 and pxcor >= 50] [set pcolor black]
 
+  ;indicate on circle patches
+  ask patch 0 50 [set pcolor yellow]
+  ask patch 0 -50 [set pcolor yellow]
+  ask patch 50 0 [set pcolor yellow]
+  ask patch -50 0 [set pcolor yellow]
+
 end
 
 
 to setup-cars
+
+end
+
+
+to turtle-go
 
 end
 
