@@ -1,5 +1,5 @@
 globals [
-
+radius
 ]
 
 turtles-own [
@@ -7,26 +7,67 @@ turtles-own [
 ]
 
 to setup
+  clear-all
+  set radius 50
+  create-turtles 1 [
+    set color red
+    set shape "car"
+    set size 5
+    set heading 180
+    move-to patch -50 0]
 
+  ;setup procedures
+  setup-road
+
+  reset-ticks
 end
+
+
+to go
+  ask turtles[arc-forward-by-dist 5]
+  tick
+end
+
 
 to setup-road ;; patch procedure
+  ask patches [set pcolor green]
+  ;draw circle
+  ask patch 0 0 [
+    ask patches in-radius 50  [ set pcolor black ]
+    ask patches in-radius 49  [ set pcolor grey ]
+  ]
+  ;draw roads
+  ask patches with [pxcor = 0 and pycor <= -50] [set pcolor black]
+  ask patches with [pxcor = 0 and pycor >= 50] [set pcolor black]
+  ask patches with [pycor = 0 and pxcor <= -50] [set pcolor black]
+  ask patches with [pycor = 0 and pxcor >= 50] [set pcolor black]
 
 end
+
 
 to setup-cars
 
 end
 
-to go
-end
 
+; Public Domain:Uri Wilensky
+to arc-forward-by-dist [dist]  ;; turtle procedure
+  ;; calculate how much of an angle we'll be turning through
+  ;; (essentially converting radians to degrees)
+  let theta dist * 180 / (pi * radius)
+  ;; turn to face the next point we're going to
+  lt theta / 2
+  ;; go there
+  fd dist
+  ;; turn to face tangent to the circle
+  lt theta / 2
+end
 @#$#@#$#@
 GRAPHICS-WINDOW
-265
-10
-675
-421
+365
+70
+775
+481
 -1
 -1
 2.0
@@ -50,10 +91,10 @@ ticks
 30.0
 
 BUTTON
-36
-72
-108
-113
+10
+75
+80
+115
 NIL
 setup
 NIL
@@ -67,11 +108,11 @@ NIL
 1
 
 BUTTON
-119
-73
-190
-113
-NIL
+90
+75
+161
+115
+go
 go
 T
 1
@@ -81,7 +122,24 @@ NIL
 NIL
 NIL
 NIL
-0
+1
+
+BUTTON
+170
+75
+245
+115
+step
+go
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
