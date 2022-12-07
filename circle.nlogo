@@ -1,26 +1,30 @@
 globals [
 radius
+num-complete
 
-  ;spawn probabilities for each tick
+ ;spawn probabilities for each tick
  north-spawn-prob
  west-spawn-prob
  south-spawn-prob
  east-spawn-prob
+ stopping-distance
 ]
 
 turtles-own [
-  yellow-patches-ran-over ;there are 4 yellow patches at the entrance/exits
+  blue-patches-ran-over ;there are 4 blue patches at the entrance/exits
   exit-number ;a number from 1-3 representing the exit
   spawn-number ; 0 north, 1 west, 2 east, 3 west
 ]
 
 to setup
   clear-all
+  set num-complete 0
+  set stopping-distance 5
   set radius 50
   set north-spawn-prob 0.01
-  set west-spawn-prob 0.02
-  set south-spawn-prob 0.03
-  set east-spawn-prob 0.04
+  set west-spawn-prob 0.01
+  set south-spawn-prob 0.01
+  set east-spawn-prob 0.01
 
   ;setup procedures
   setup-road
@@ -50,39 +54,64 @@ to setup-road ;; patch procedure
   ask patches with [pycor = 0 and pxcor >= 50] [set pcolor black]
 
   ;indicate on circle patches
-  ask patch 0 50 [set pcolor yellow]
-  ask patch 0 -50 [set pcolor yellow]
-  ask patch 50 0 [set pcolor yellow]
-  ask patch -50 0 [set pcolor yellow]
+  ask patch 0 50 [set pcolor blue]
+  ask patch 0 -50 [set pcolor blue]
+  ask patch 50 0 [set pcolor blue]
+  ask patch -50 0 [set pcolor blue]
+
+  ;make blue yield patches
+  ask patch 0 60 [set pcolor yellow]
+  ask patch 0 -60 [set pcolor yellow]
+  ask patch 60 0 [set pcolor yellow]
+  ask patch -60 0 [set pcolor yellow]
 end
 
 
 to turtle-go ;;a turtle procedure
 
     (ifelse
-    yellow-patches-ran-over = 0 [ ;on road entering circle
-      fd 1
+    blue-patches-ran-over = 0 [ ;on road entering circle
 
-      ;update yellow patches
-      if pcolor = yellow
-      [set yellow-patches-ran-over (yellow-patches-ran-over + 1)
-      rt 90 ;pivot to get ready to go around the cirlce
+
+      ;check if any cars are on the patches ahead (stopping-distance away)
+      ifelse member? true n-values stopping-distance [ x -> any? (turtles-on patch-ahead (x + 1)) with [[heading] of self = [heading] of myself] ]
+      [];do nothing
+
+      [; if no turtles ahead, move forward one
+
+
+      ifelse pcolor = yellow
+        [;at the yield patch
+          ifelse yield? [][fd 1]
+        ]
+        [fd 1];false
+
+      ;update blue patches
+      if pcolor = blue
+      [set blue-patches-ran-over (blue-patches-ran-over + 1)
+      rt 90 ;pivot to get ready to go around the circle
       ]
-
+     ]
     ]
-    yellow-patches-ran-over = exit-number + 1 [ ; exiting. we add plus one because the first yellow patch shouldn't count
-      fd 1
+
+    blue-patches-ran-over = exit-number + 1 [ ; exiting. we add plus one because the first blue patch shouldn't count
+
+      ifelse patch-ahead 1 = nobody
+      [set num-complete (num-complete + 1)
+       die
+      ]
+      [fd 1]
     ]
     ;;else commands: continue around the circle and check if it's time to exit
     [
       arc-forward-by-dist 1
 
-      ;update yellow patches
-      if pcolor = yellow
-      [set yellow-patches-ran-over (yellow-patches-ran-over + 1)]
+      ;update blue patches
+      if pcolor = blue
+      [set blue-patches-ran-over (blue-patches-ran-over + 1)]
 
       ;pivot if reached entrance to circle
-      if yellow-patches-ran-over = exit-number + 1
+      if blue-patches-ran-over = exit-number + 1
       [set heading ( ((exit-number + spawn-number) mod 4) * -90)] ; this calculates the correct heading direction (rt 90 results in small error)
 
   ])
@@ -91,61 +120,73 @@ end
 
 to spawn-turtles
 ;north spawn
-if random-float 1 < north-spawn-prob
+ask patch 0 100 [
+    if random-float 1 < north-spawn-prob and
+    (not any? turtles in-radius stopping-distance with [heading = 180])
   [
-Create-turtles 1 [
-set yellow-patches-ran-over 0
+sprout 1 [
+set blue-patches-ran-over 0
 set spawn-number 0
 set exit-number (random 3 + 1 ); either 1, 2, or 3
 Set color red
 Set shape "car"
 Set size 5
 Set heading 180
-Move-to patch 0 100
 ]
 ]
+  ]
+
+
 ;west spawn
-if random-float 1 < west-spawn-prob
+ask patch -100 0 [
+    if random-float 1 < west-spawn-prob and
+    (not any? turtles in-radius stopping-distance with [heading = 90])
   [
-Create-turtles 1 [
-set yellow-patches-ran-over 0
+sprout 1 [
+set blue-patches-ran-over 0
 set spawn-number 1
-set exit-number (random 3 + 1 ); either 1, 2, or 3
-Set color yellow
-Set shape "car"
-Set size 5
-Set heading 90
-Move-to patch -100 0
-]
-]
-;south spawn
-if random-float 1 < south-spawn-prob
-  [
-Create-turtles 1 [
-set yellow-patches-ran-over 0
-set spawn-number 2
 set exit-number (random 3 + 1 ); either 1, 2, or 3
 Set color blue
 Set shape "car"
 Set size 5
-Set heading 0
-Move-to patch 0 -100
+Set heading 90
 ]
-]
-;east spawn
-if random-float 1 < east-spawn-prob
+  ]]
+
+
+;south spawn
+ask patch 0 -100 [
+    if random-float 1 < south-spawn-prob and
+    (not any? turtles in-radius stopping-distance with [heading = 0])
   [
-Create-turtles 1 [
-set yellow-patches-ran-over 0
+sprout 1 [
+set blue-patches-ran-over 0
+set spawn-number 2
+set exit-number (random 3 + 1 ); either 1, 2, or 3
+Set color yellow
+Set shape "car"
+Set size 5
+Set heading 0
+]
+  ]]
+
+;east spawn
+ask patch 100 0[
+    if random-float 1 < east-spawn-prob and
+    (not any? turtles in-radius stopping-distance with [heading = 270])
+  [
+sprout 1 [
+set blue-patches-ran-over 0
 set spawn-number 3
 set exit-number (random 3 + 1 ); either 1, 2, or 3
 Set color violet
 Set shape "car"
 Set size 5
 Set heading 270
-Move-to patch 100 0
 ]
-]
+  ]]
+
+
 end
 
 
@@ -161,6 +202,53 @@ to arc-forward-by-dist [dist]  ;; turtle procedure
   ;; turn to face tangent to the circle
   lt theta / 2
 end
+
+
+ to-report yield?
+  (ifelse
+    spawn-number = 0 [
+      if any? other turtles with [
+      xcor >= [xcor] of myself
+      and ycor <= [ycor] of myself
+      and ycor >= 10
+      ]
+      [report true]
+    ]
+
+    spawn-number = 1 [
+      if any? other turtles with [
+        ycor >= [ycor] of myself
+      and xcor >= [xcor] of myself
+      and xcor <= -10
+      ]
+
+      [report true]
+    ]
+
+    spawn-number = 2 [
+      if any? other turtles with [
+      xcor <= [xcor] of myself
+      and ycor >= [ycor] of myself
+      and ycor <= -10
+      ]
+
+      [report true]
+    ]
+
+    spawn-number = 3 [
+      if any? other turtles with [
+      ycor <= [ycor] of myself
+      and xcor <= [xcor] of myself
+      and xcor >= 10
+      ]
+
+      [report true]
+    ])
+
+ report false
+
+end
+
 @#$#@#$#@
 GRAPHICS-WINDOW
 365
