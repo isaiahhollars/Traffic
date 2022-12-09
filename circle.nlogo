@@ -59,7 +59,7 @@ to setup-road ;; patch procedure
   ask patch 50 0 [set pcolor blue]
   ask patch -50 0 [set pcolor blue]
 
-  ;make blue yield patches
+  ;make yellow yield patches
   ask patch 0 60 [set pcolor yellow]
   ask patch 0 -60 [set pcolor yellow]
   ask patch 60 0 [set pcolor yellow]
