@@ -21,10 +21,10 @@ to setup
   set num-complete 0
   set stopping-distance 5
   set radius 50
-  set north-spawn-prob 0.01
-  set west-spawn-prob 0.01
-  set south-spawn-prob 0.01
-  set east-spawn-prob 0.01
+  set north-spawn-prob 0.02
+  set west-spawn-prob 0.02
+  set south-spawn-prob 0.02
+  set east-spawn-prob 0.02
 
   ;setup procedures
   setup-road
@@ -112,7 +112,7 @@ to turtle-go ;;a turtle procedure
 
       ;pivot if reached entrance to circle
       if blue-patches-ran-over = exit-number + 1
-      [set heading ( ((exit-number + spawn-number) mod 4) * -90)] ; this calculates the correct heading direction (rt 90 results in small error)
+      [set heading exit-heading] ; this calculates the correct heading direction (rt 90 results in small error)
 
   ])
 end
@@ -246,9 +246,11 @@ end
     ])
 
  report false
-
 end
 
+to-report exit-heading
+  report ( ((exit-number + spawn-number) mod 4) * -90)
+end
 @#$#@#$#@
 GRAPHICS-WINDOW
 365
