@@ -14,6 +14,8 @@ turtles-own [
   blue-patches-ran-over ;there are 4 blue patches at the entrance/exits
   exit-number ;a number from 1-3 representing the exit
   spawn-number ; 0 north, 1 west, 2 east, 3 west
+  entering?
+  exiting?
 ]
 
 to setup
@@ -60,12 +62,71 @@ to setup-road ;; patch procedure
   ask patch -50 0 [set pcolor blue]
 
   ;make yellow yield patches
-  ;somewhere on circle this time!
+  ask patch 9 49 [set pcolor yellow]
+  ask patch -49 9 [set pcolor yellow]
+  ask patch -9 -49 [set pcolor yellow]
+  ask patch 49 -9 [set pcolor yellow]
 end
 
 
 to turtle-go ;;a turtle procedure
-   fd 1
+
+  ;code for straight entrance into circle
+  if entering?
+  [
+  ifelse cars-ahead?
+    [];do nothing if there are cars ahead
+    [; no cars ahead
+      fd 1
+      if pcolor = blue
+      [set blue-patches-ran-over (blue-patches-ran-over + 1)
+      rt 90 ;pivot to get ready to go around the circle
+      set entering? false
+      ]
+
+
+    ]
+  ]
+
+  ; code for going around the circle
+  if not entering? and not exiting?
+  [
+
+    ifelse pcolor = yellow
+    [;on a yield patch
+
+
+    ]
+ [; not on a yield patch, proceded if no cars ahead
+ifelse cars-ahead?
+      [];do nothing
+ [
+  arc-forward-by-dist 1
+
+  ;update blue patches
+  if pcolor = blue
+  [set blue-patches-ran-over (blue-patches-ran-over + 1)]
+
+  ;pivot if reached entrance to circle
+  if blue-patches-ran-over = exit-number + 1
+  [set heading ( ((exit-number + spawn-number) mod 4) * -90)]
+
+    ]
+   ]
+ ]
+
+  ;code for exiting the circle
+  if exiting?
+  [
+  ifelse patch-ahead 1 = nobody
+      [set num-complete (num-complete + 1)
+       die
+      ]
+      [fd 1]
+  ]
+
+
+
 end
 
 
@@ -83,6 +144,8 @@ Set color red
 Set shape "car"
 Set size 5
 Set heading 180
+set entering? true
+set exiting? false
 ]
 ]
   ]
@@ -101,6 +164,8 @@ Set color blue
 Set shape "car"
 Set size 5
 Set heading 90
+set entering? true
+set exiting? false
 ]
   ]]
 
@@ -118,6 +183,8 @@ Set color yellow
 Set shape "car"
 Set size 5
 Set heading 0
+set entering? true
+set exiting? false
 ]
   ]]
 
@@ -134,6 +201,8 @@ Set color violet
 Set shape "car"
 Set size 5
 Set heading 270
+set entering? true
+set exiting? false
 ]
   ]]
 
@@ -155,12 +224,74 @@ to arc-forward-by-dist [dist]  ;; turtle procedure
 end
 
 
- to-report yield?
+to-report yield?
  report false
 end
 
 to-report exit-heading
   report ( ((exit-number + spawn-number) mod 4) * -90)
+end
+
+to-report entrance-tangent-heading
+    (ifelse
+    spawn-number = 0 [report -90 ]
+    spawn-number = 1 [report 180]
+    spawn-number = 2 [report 90]
+    spawn-number = 3 [report 0]
+   )
+end
+
+
+to-report cars-ahead?
+
+    ifelse entering?
+    [; if entering, we need to check if we are close to the circle
+
+    ifelse (any? patches in-radius stopping-distance with [pcolor = blue ])
+    [; do crazy stuff. We need to look straight ahead and some in the cirlce..
+      let distance-straight distance (entering-patch)
+      let distance-circle (stopping-distance - distance-straight)
+
+      ;usual straight reporter using  distance-straight instead of stopping distance
+      let cars-straight? member? true n-values distance-straight
+    [ x -> any? (turtles-on patch-ahead (x + 1)) with [[heading] of self = [heading] of myself] ]
+
+      ;curve reporter using  distance-circle from entering-patch instead of stopping distance
+      ;let cars-circle? false
+      let cars-circle? false
+      ask entering-patch[
+      ask myself[set cars-circle? member? true n-values distance-circle
+      [ x -> any? (turtles-on patch-at-heading-and-distance (entrance-tangent-heading - (x + 1) * 180 / (pi * radius) / 2)
+          (x + 1))
+      ]
+        ]
+      ]
+
+    report (cars-straight? or cars-circle?)
+    ]
+
+    [; do the normal straight look ahead
+    report member? true n-values stopping-distance
+    [ x -> any? (turtles-on patch-ahead (x + 1)) with [[heading] of self = [heading] of myself] ]
+    ]
+
+
+    ]
+
+    [; if not entering: this is used for looking ahead inside the circle
+    report member? true n-values stopping-distance
+    [ x -> any? (turtles-on patch-left-and-ahead ( (x + 1) * 180 / (pi * radius) / 2) (x + 1))]
+
+    ]
+end
+
+to-report entering-patch
+  (ifelse
+    spawn-number = 0 [report patch 0 50 ]
+    spawn-number = 1 [report patch -50 0 ]
+    spawn-number = 2 [report patch 0 -50 ]
+    spawn-number = 3 [report patch 50 0 ]
+   )
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
