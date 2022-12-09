@@ -11,11 +11,12 @@ num-complete
 ]
 
 turtles-own [
-  blue-patches-ran-over ;there are 4 blue patches at the entrance/exits
+  yellow-patches-ran-over ;there are 4 yellow yield patches before the blue entrance/exits
   exit-number ;a number from 1-3 representing the exit
   spawn-number ; 0 north, 1 west, 2 east, 3 west
   entering?
   exiting?
+ exiting-straight?
 ]
 
 to setup
@@ -79,7 +80,7 @@ to turtle-go ;;a turtle procedure
     [; no cars ahead
       fd 1
       if pcolor = blue
-      [set blue-patches-ran-over (blue-patches-ran-over + 1)
+      [
       rt 90 ;pivot to get ready to go around the circle
       set entering? false
       ]
@@ -94,37 +95,34 @@ to turtle-go ;;a turtle procedure
 
     ifelse pcolor = yellow
     [;on a yield patch
-
-
+    set yellow-patches-ran-over (yellow-patches-ran-over + 1)
+      ifelse yield?
+      []
+      [arc-forward-by-dist 1]
     ]
- [; not on a yield patch, proceded if no cars ahead
+    [; not on a yield patch, proceded if no cars ahead
 ifelse cars-ahead?
       [];do nothing
- [
-  arc-forward-by-dist 1
-
-  ;update blue patches
-  if pcolor = blue
-  [set blue-patches-ran-over (blue-patches-ran-over + 1)]
-
-  ;pivot if reached entrance to circle
-  if blue-patches-ran-over = exit-number + 1
-  [set heading ( ((exit-number + spawn-number) mod 4) * -90)]
-
-    ]
+ [arc-forward-by-dist 1]
    ]
  ]
 
   ;code for exiting the circle
   if exiting?
-  [
+[
+ if exiting-straight?[
   ifelse patch-ahead 1 = nobody
       [set num-complete (num-complete + 1)
        die
       ]
       [fd 1]
   ]
+ arc-forward-by-dist 1
+    if pcolor = blue [set heading ( ((exit-number + spawn-number) mod 4) * -90)
+    set exiting-straight? true
+    ]
 
+]
 
 
 end
@@ -137,7 +135,7 @@ ask patch 0 100 [
     (not any? turtles in-radius stopping-distance with [heading = 180])
   [
 sprout 1 [
-set blue-patches-ran-over 0
+set yellow-patches-ran-over 0
 set spawn-number 0
 set exit-number (random 3 + 1 ); either 1, 2, or 3
 Set color red
@@ -146,6 +144,7 @@ Set size 5
 Set heading 180
 set entering? true
 set exiting? false
+set exiting-straight? false
 ]
 ]
   ]
@@ -157,7 +156,7 @@ ask patch -100 0 [
     (not any? turtles in-radius stopping-distance with [heading = 90])
   [
 sprout 1 [
-set blue-patches-ran-over 0
+set yellow-patches-ran-over 0
 set spawn-number 1
 set exit-number (random 3 + 1 ); either 1, 2, or 3
 Set color blue
@@ -166,6 +165,7 @@ Set size 5
 Set heading 90
 set entering? true
 set exiting? false
+set exiting-straight? false
 ]
   ]]
 
@@ -176,7 +176,7 @@ ask patch 0 -100 [
     (not any? turtles in-radius stopping-distance with [heading = 0])
   [
 sprout 1 [
-set blue-patches-ran-over 0
+set yellow-patches-ran-over 0
 set spawn-number 2
 set exit-number (random 3 + 1 ); either 1, 2, or 3
 Set color yellow
@@ -185,6 +185,7 @@ Set size 5
 Set heading 0
 set entering? true
 set exiting? false
+set exiting-straight? false
 ]
   ]]
 
@@ -194,7 +195,7 @@ ask patch 100 0[
     (not any? turtles in-radius stopping-distance with [heading = 270])
   [
 sprout 1 [
-set blue-patches-ran-over 0
+set yellow-patches-ran-over 0
 set spawn-number 3
 set exit-number (random 3 + 1 ); either 1, 2, or 3
 Set color violet
@@ -203,6 +204,7 @@ Set size 5
 Set heading 270
 set entering? true
 set exiting? false
+set exiting-straight? false
 ]
   ]]
 
@@ -225,7 +227,11 @@ end
 
 
 to-report yield?
- report false
+  if yellow-patches-ran-over = exit-number
+  [set exiting? true
+  report false]
+
+ report true
 end
 
 to-report exit-heading
@@ -248,13 +254,13 @@ to-report cars-ahead?
     [; if entering, we need to check if we are close to the circle
 
     ifelse (any? patches in-radius stopping-distance with [pcolor = blue ])
-    [; do crazy stuff. We need to look straight ahead and some in the cirlce..
+  [; do crazy stuff. We need to look straight ahead and some in the cirlce..
       let distance-straight distance (entering-patch)
       let distance-circle (stopping-distance - distance-straight)
 
       ;usual straight reporter using  distance-straight instead of stopping distance
       let cars-straight? member? true n-values distance-straight
-    [ x -> any? (turtles-on patch-ahead (x + 1)) with [[heading] of self = [heading] of myself] ]
+    [ x -> any? (turtles-on patch-ahead (x + 1)) with [heading = [heading] of myself or heading = entrance-tangent-heading] ]
 
       ;curve reporter using  distance-circle from entering-patch instead of stopping distance
       ;let cars-circle? false
@@ -268,15 +274,15 @@ to-report cars-ahead?
       ]
 
     report (cars-straight? or cars-circle?)
-    ]
+  ]
 
-    [; do the normal straight look ahead
+  [; do the normal straight look ahead if not close to circle
     report member? true n-values stopping-distance
-    [ x -> any? (turtles-on patch-ahead (x + 1)) with [[heading] of self = [heading] of myself] ]
-    ]
+    [ x -> any? (turtles-on patch-ahead (x + 1)) with [heading = [heading] of myself or heading = entrance-tangent-heading] ]
+  ]
 
 
-    ]
+ ]; end of entering
 
     [; if not entering: this is used for looking ahead inside the circle
     report member? true n-values stopping-distance
