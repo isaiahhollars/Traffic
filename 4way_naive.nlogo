@@ -1,5 +1,6 @@
 globals [
 num-complete
+queue ; stores the order that cars arrive at intersection
 
  ;spawn probabilities for each tick
  north-spawn-prob
@@ -12,16 +13,19 @@ num-complete
 turtles-own [
   exit-number ;a number from 1-3 representing the exit
   spawn-number ; 0 north, 1 west, 2 east, 3 west
+  entering?
+  exiting?
 ]
 
 to setup
   clear-all
+  set queue []
   set num-complete 0
   set stopping-distance 5
-  set north-spawn-prob 0.01
-  set west-spawn-prob 0.01
-  set south-spawn-prob 0.01
-  set east-spawn-prob 0.01
+  set north-spawn-prob 0.04
+  set west-spawn-prob 0.04
+  set south-spawn-prob 0.04
+  set east-spawn-prob 0.04
 
   ;setup procedures
   setup-road
@@ -44,16 +48,67 @@ to setup-road ;; patch procedure
   ask patches with [pxcor = 0 ] [set pcolor black]
   ask patches with [pycor = 0 ] [set pcolor black]
 
-  ;make the yield indicator patches
-  ask patch 0 5 [set pcolor yellow]
-  ask patch 0 -5 [set pcolor yellow]
-  ask patch 5 0 [set pcolor yellow]
-  ask patch -5 0 [set pcolor yellow]
+  ;make the yield patches yellow and center blue
+  ask patch 0 10 [set pcolor yellow]
+  ask patch 0 -10 [set pcolor yellow]
+  ask patch 10 0 [set pcolor yellow]
+  ask patch -10 0 [set pcolor yellow]
+  ask patch 0 0 [set pcolor blue]
 end
 
 
 to turtle-go ;;a turtle procedure
-fd 1
+if entering?
+  [; car is entering
+
+    ;check if any cars are on the patches ahead (stopping-distance away)
+      ifelse member? true n-values stopping-distance [ x -> any? (turtles-on patch-ahead (x + 1)) with [[heading] of self = [heading] of myself] ]
+      [];do nothing
+
+      [; if no turtles ahead, move forward one
+      fd 1
+
+      ;update yellow/yield status
+      if pcolor = yellow
+      [
+        set queue lput who queue
+       set entering? false
+      ]
+
+    ]
+
+
+  ]
+if not entering? and not exiting?
+  [; car has reached a yield point, is in the queue, and has not yet reached the blue center
+
+ifelse first queue = who
+   [; I am first in the queue, so I will head towards the blue center
+    fd 1
+      if pcolor = blue [; time to exit!
+        set heading exit-heading
+        set queue but-first queue ; dequeue
+        set exiting? true
+      ]
+    ]
+
+
+  [; I am not first in the queue, so I will wait (a little naive)
+      ;do nothing
+   ]
+
+  ]
+
+if exiting?
+  [; car has reached the blue center and is already pivoted to the correct exit heading
+
+    ifelse patch-ahead 1 = nobody
+      [set num-complete (num-complete + 1)
+       die
+      ]
+      [fd 1]
+  ]
+
 end
 
 
@@ -70,6 +125,8 @@ Set color red
 Set shape "car"
 Set size 5
 Set heading 180
+set entering? true
+set exiting? false
 ]
 ]
   ]
@@ -87,6 +144,8 @@ Set color blue
 Set shape "car"
 Set size 5
 Set heading 90
+set entering? true
+set exiting? false
 ]
   ]]
 
@@ -103,6 +162,8 @@ Set color yellow
 Set shape "car"
 Set size 5
 Set heading 0
+set entering? true
+set exiting? false
 ]
   ]]
 
@@ -118,13 +179,16 @@ Set color violet
 Set shape "car"
 Set size 5
 Set heading 270
+set entering? true
+set exiting? false
 ]
   ]]
-
-
 end
 
 
+to-report exit-heading ; turtle calulate exit heading based on exit number and spawn number
+ report ((exit-number + spawn-number) mod 4) * -90
+end
 @#$#@#$#@
 GRAPHICS-WINDOW
 365
@@ -207,7 +271,7 @@ NIL
 @#$#@#$#@
 ## WHAT IS IT?
 
-This model is going to represent a traffic circle...
+This model represents a naive 4-way stop
 
 ## HOW TO USE IT
 
