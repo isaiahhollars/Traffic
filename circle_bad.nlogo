@@ -96,11 +96,12 @@ to turtle-go ;;a turtle procedure
     ifelse pcolor = yellow
     [;on a yield patch
     set yellow-patches-ran-over (yellow-patches-ran-over + 1)
+      if yellow-patches-ran-over = exit-number [set exiting? true]
       ifelse yield?
       []
       [arc-forward-by-dist 1]
     ]
-    [; not on a yield patch, proceded if no cars ahead
+   [; not on a yield patch, proceded if no cars ahead
 ifelse cars-ahead?
       [];do nothing
  [arc-forward-by-dist 1]
@@ -227,10 +228,7 @@ end
 
 
 to-report yield?
-  if yellow-patches-ran-over = exit-number
-  [set exiting? true
-  report false]
-
+  if exiting? [report false]
  report true
 end
 
@@ -240,7 +238,7 @@ end
 
 to-report entrance-tangent-heading
     (ifelse
-    spawn-number = 0 [report -90 ]
+    spawn-number = 0 [report 270 ]
     spawn-number = 1 [report 180]
     spawn-number = 2 [report 90]
     spawn-number = 3 [report 0]
@@ -248,19 +246,18 @@ to-report entrance-tangent-heading
 end
 
 
-to-report cars-ahead?
+to-report cars-ahead? ;;turtle procedure
+ifelse entering?
+  [; if entering, we need to check if we are close to the circle
 
-    ifelse entering?
-    [; if entering, we need to check if we are close to the circle
-
-    ifelse (any? patches in-radius stopping-distance with [pcolor = blue ])
+ ifelse (distance entering-patch < stopping-distance)
   [; do crazy stuff. We need to look straight ahead and some in the cirlce..
       let distance-straight distance (entering-patch)
       let distance-circle (stopping-distance - distance-straight)
 
       ;usual straight reporter using  distance-straight instead of stopping distance
       let cars-straight? member? true n-values distance-straight
-    [ x -> any? (turtles-on patch-ahead (x + 1)) with [heading = [heading] of myself or heading = entrance-tangent-heading] ]
+    [ x -> any? (turtles-on patch-ahead (x + 1)) with [(heading = [heading] of myself) or (heading = entrance-tangent-heading)] ]
 
       ;curve reporter using  distance-circle from entering-patch instead of stopping distance
       ;let cars-circle? false
@@ -276,19 +273,19 @@ to-report cars-ahead?
     report (cars-straight? or cars-circle?)
   ]
 
-  [; do the normal straight look ahead if not close to circle
+  [;if not close to circle, do the normal straight look ahead
     report member? true n-values stopping-distance
-    [ x -> any? (turtles-on patch-ahead (x + 1)) with [heading = [heading] of myself or heading = entrance-tangent-heading] ]
+    [ x -> any? (turtles-on patch-ahead (x + 1)) with [(heading = [heading] of myself) or (heading = entrance-tangent-heading)] ]
   ]
-
 
  ]; end of entering
 
-    [; if not entering: this is used for looking ahead inside the circle
-    report member? true n-values stopping-distance
-    [ x -> any? (turtles-on patch-left-and-ahead ( (x + 1) * 180 / (pi * radius) / 2) (x + 1))]
+ [ ;if not entering: this is used for looking ahead inside the circle
+    report member? true n-values stopping-distance [ x -> any? turtles-on
+      (patch-left-and-ahead ( ( ( (x + 1) * 180) / (pi * radius) ) / 2) (x + 1) )]
 
-    ]
+
+  ]
 end
 
 to-report entering-patch
