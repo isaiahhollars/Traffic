@@ -11,7 +11,6 @@ num-complete
 ]
 
 turtles-own [
-  yellow-patches-ran-over ;there are 4 yellow yield patches before the blue entrance/exits
   exit-number ;a number from 1-3 representing the exit
   spawn-number ; 0 north, 1 west, 2 east, 3 west
   entering?
@@ -95,8 +94,7 @@ to turtle-go ;;a turtle procedure
 
     ifelse pcolor = yellow
     [;on a yield patch
-    set yellow-patches-ran-over (yellow-patches-ran-over + 1)
-      if yellow-patches-ran-over = exit-number [set exiting? true]
+      if should-i-exit? [set exiting? true]
       ifelse yield?
       []
       [arc-forward-by-dist 1]
@@ -106,111 +104,33 @@ ifelse cars-ahead?
       [];do nothing
  [arc-forward-by-dist 1]
    ]
- ]
+
+ ]; end of going around circle code
 
   ;code for exiting the circle
   if exiting?
 [
- if exiting-straight?[
+ ifelse exiting-straight?[
   ifelse patch-ahead 1 = nobody
       [set num-complete (num-complete + 1)
        die
       ]
       [fd 1]
+  ];end exit straight
+  [;otherwise, continue the small exit procedure inside the circle
+    arc-forward-by-dist 1
+    if pcolor = blue [
+        set exiting-straight? true
+        set heading exit-heading
+      ]
+
   ]
- arc-forward-by-dist 1
-    if pcolor = blue [set heading ( ((exit-number + spawn-number) mod 4) * -90)
-    set exiting-straight? true
-    ]
 
 ]
 
 
 end
 
-
-to spawn-turtles
-;north spawn
-ask patch 0 100 [
-    if random-float 1 < north-spawn-prob and
-    (not any? turtles in-radius stopping-distance with [heading = 180])
-  [
-sprout 1 [
-set yellow-patches-ran-over 0
-set spawn-number 0
-set exit-number (random 3 + 1 ); either 1, 2, or 3
-Set color red
-Set shape "car"
-Set size 5
-Set heading 180
-set entering? true
-set exiting? false
-set exiting-straight? false
-]
-]
-  ]
-
-
-;west spawn
-ask patch -100 0 [
-    if random-float 1 < west-spawn-prob and
-    (not any? turtles in-radius stopping-distance with [heading = 90])
-  [
-sprout 1 [
-set yellow-patches-ran-over 0
-set spawn-number 1
-set exit-number (random 3 + 1 ); either 1, 2, or 3
-Set color blue
-Set shape "car"
-Set size 5
-Set heading 90
-set entering? true
-set exiting? false
-set exiting-straight? false
-]
-  ]]
-
-
-;south spawn
-ask patch 0 -100 [
-    if random-float 1 < south-spawn-prob and
-    (not any? turtles in-radius stopping-distance with [heading = 0])
-  [
-sprout 1 [
-set yellow-patches-ran-over 0
-set spawn-number 2
-set exit-number (random 3 + 1 ); either 1, 2, or 3
-Set color yellow
-Set shape "car"
-Set size 5
-Set heading 0
-set entering? true
-set exiting? false
-set exiting-straight? false
-]
-  ]]
-
-;east spawn
-ask patch 100 0[
-    if random-float 1 < east-spawn-prob and
-    (not any? turtles in-radius stopping-distance with [heading = 270])
-  [
-sprout 1 [
-set yellow-patches-ran-over 0
-set spawn-number 3
-set exit-number (random 3 + 1 ); either 1, 2, or 3
-Set color violet
-Set shape "car"
-Set size 5
-Set heading 270
-set entering? true
-set exiting? false
-set exiting-straight? false
-]
-  ]]
-
-
-end
 
 
 ; Public Domain:Uri Wilensky
@@ -228,12 +148,47 @@ end
 
 
 to-report yield?
-  if exiting? [report false]
- report true
+  ifelse exiting? [report false]
+ [
+  (ifelse
+    patch-here = patch 9 49 [
+    if any? other turtles with [
+      xcor = 0
+      and ycor >= 50
+      ]
+      [report true]
+
+    ]
+    patch-here = patch -49 9[
+    if any? other turtles with [
+      ycor = 0 and
+        xcor <= -50
+      ]
+      [report true]
+
+    ]
+    patch-here = patch -9 -49[
+    if any? other turtles with [
+      xcor = 0
+        and ycor <= -50
+      ]
+      [report true]
+
+    ]
+    patch-here = patch 49 -9[
+    if any? other turtles with [
+      ycor = 0 and
+        xcor >= 50
+      ]
+      [report true]
+    ]
+    )
+   report false
+  ]
 end
 
 to-report exit-heading
-  report ( ((exit-number + spawn-number) mod 4) * -90)
+  report ( 360 - ((exit-number + spawn-number) mod 4) * 90)
 end
 
 to-report entrance-tangent-heading
@@ -261,16 +216,24 @@ ifelse entering?
 
       ;curve reporter using  distance-circle from entering-patch instead of stopping distance
       ;let cars-circle? false
-      let cars-circle? false
-      ask entering-patch[
-      ask myself[set cars-circle? member? true n-values distance-circle
-      [ x -> any? (turtles-on patch-at-heading-and-distance (entrance-tangent-heading - (x + 1) * 180 / (pi * radius) / 2)
-          (x + 1))
-      ]
-        ]
-      ]
+      ;let cars-circle? false
+      ;ask entering-patch[
+      ;ask myself[set cars-circle? member? true n-values distance-circle
+      ;[ x -> any? (turtles-on patch-at-heading-and-distance (entrance-tangent-heading - (x + 1) * 180 / (pi * radius) / 2)
+      ;    (x + 1))
+      ;]
+      ;  ]
+      ;]
+      ;let tmp  radius
+      ;let tmp2  0
+     ; ask entering-patch [
+      ; set radius ahead-in-circle? distance-circle]
 
-    report (cars-straight? or cars-circle?)
+    ;set tmp2 radius
+    ;set radius tmp
+      let cars-circle? any? other turtles in-radius distance-circle with [entering? = false and exiting? = false]
+      report (cars-straight? or cars-circle?)
+
   ]
 
   [;if not close to circle, do the normal straight look ahead
@@ -281,11 +244,47 @@ ifelse entering?
  ]; end of entering
 
  [ ;if not entering: this is used for looking ahead inside the circle
-    report member? true n-values stopping-distance [ x -> any? turtles-on
-      (patch-left-and-ahead ( ( ( (x + 1) * 180) / (pi * radius) ) / 2) (x + 1) )]
 
+    report ahead-in-circle? stopping-distance
 
   ]
+end
+
+to-report ahead-in-circle? [dist] ;a turtle or a patch procedure in above code
+  (ifelse
+      xcor >= 0 and ycor > 0 [
+      report any? other turtles in-radius dist with
+          [entering? = false and exiting? = false and ycor > [ycor] of myself and xcor < [xcor] of myself]
+
+      ]
+      xcor < 0 and ycor >= 0 [
+      report any? other turtles in-radius dist with
+          [entering? = false and exiting? = false and ycor < [ycor] of myself and xcor < [xcor] of myself]
+
+      ]
+      xcor <= 0 and ycor < 0 [
+      report any? other turtles in-radius dist with
+          [entering? = false and exiting? = false and ycor < [ycor] of myself and xcor > [xcor] of myself]
+
+      ]
+      xcor > 0 and ycor < 0 [
+      report any? other turtles in-radius dist with
+            [entering? = false and exiting? = false and ycor > [ycor] of myself and xcor > [xcor] of myself]
+
+      ]
+
+      )
+    report false
+end
+
+to-report should-i-exit?
+ let n ((spawn-number + exit-number) mod 4 )
+  (ifelse
+    n = 0 [report patch-here = patch 9 49]
+    n = 1 [report patch-here = patch -49 9]
+    n = 2 [report patch-here = patch -9 -49]
+    n = 3 [report patch-here = patch 49 -9]
+    )
 end
 
 to-report entering-patch
@@ -296,15 +295,94 @@ to-report entering-patch
     spawn-number = 3 [report patch 50 0 ]
    )
 end
+
+
+
+to spawn-turtles
+;north spawn
+ask patch 0 100 [
+    if random-float 1 < north-spawn-prob and
+    (not any? turtles in-radius stopping-distance with [heading = 180])
+  [
+sprout 1 [
+set spawn-number 0
+set exit-number (random 3 + 1 ); either 1, 2, or 3
+Set color red
+Set shape "car"
+Set size 5
+Set heading 180
+set entering? true
+set exiting? false
+set exiting-straight? false
+]
+]
+  ]
+
+
+;west spawn
+ask patch -100 0 [
+    if random-float 1 < west-spawn-prob and
+    (not any? turtles in-radius stopping-distance with [heading = 90])
+  [
+sprout 1 [
+set spawn-number 1
+set exit-number (random 3 + 1 ); either 1, 2, or 3
+Set color blue
+Set shape "car"
+Set size 5
+Set heading 90
+set entering? true
+set exiting? false
+set exiting-straight? false
+]
+  ]]
+
+
+;south spawn
+ask patch 0 -100 [
+    if random-float 1 < south-spawn-prob and
+    (not any? turtles in-radius stopping-distance with [heading = 0])
+  [
+sprout 1 [
+set spawn-number 2
+set exit-number (random 3 + 1 ); either 1, 2, or 3
+Set color yellow
+Set shape "car"
+Set size 5
+Set heading 0
+set entering? true
+set exiting? false
+set exiting-straight? false
+]
+  ]]
+
+;east spawn
+ask patch 100 0[
+    if random-float 1 < east-spawn-prob and
+    (not any? turtles in-radius stopping-distance with [heading = 270])
+  [
+sprout 1 [
+set spawn-number 3
+set exit-number (random 3 + 1 ); either 1, 2, or 3
+Set color violet
+Set shape "car"
+Set size 5
+Set heading 270
+set entering? true
+set exiting? false
+set exiting-straight? false
+]
+  ]]
+end
 @#$#@#$#@
 GRAPHICS-WINDOW
 365
 70
-775
-481
+1058
+764
 -1
 -1
-2.0
+3.41
 1
 10
 1
