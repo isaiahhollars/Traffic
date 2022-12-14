@@ -1,6 +1,7 @@
 globals [
 radius
 num-complete
+;spawn-prob-all
 
  ;spawn probabilities for each tick
  north-spawn-prob
@@ -23,10 +24,10 @@ to setup
   set num-complete 0
   set stopping-distance 5
   set radius 50
-  set north-spawn-prob 0.02
-  set west-spawn-prob 0.02
-  set south-spawn-prob 0.02
-  set east-spawn-prob 0.02
+  set north-spawn-prob spawn-prob-all
+  set west-spawn-prob spawn-prob-all
+  set south-spawn-prob spawn-prob-all
+  set east-spawn-prob spawn-prob-all
 
   ;setup procedures
   setup-road
@@ -36,6 +37,7 @@ end
 
 
 to go
+  if ticks > 5000 [stop]
   spawn-turtles
   ask turtles[turtle-go]
   tick
@@ -155,6 +157,7 @@ to-report yield?
     if any? other turtles with [
       xcor = 0
       and ycor >= 50
+      and ycor <= 75
       ]
       [report true]
 
@@ -163,6 +166,7 @@ to-report yield?
     if any? other turtles with [
       ycor = 0 and
         xcor <= -50
+       and xcor >= -75
       ]
       [report true]
 
@@ -171,6 +175,7 @@ to-report yield?
     if any? other turtles with [
       xcor = 0
         and ycor <= -50
+        and ycor >= -75
       ]
       [report true]
 
@@ -179,6 +184,7 @@ to-report yield?
     if any? other turtles with [
       ycor = 0 and
         xcor >= 50
+       and xcor <= 75
       ]
       [report true]
     ]
@@ -376,13 +382,13 @@ set exiting-straight? false
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-365
-70
-1058
-764
+360
+105
+873
+619
 -1
 -1
-3.41
+2.51244
 1
 10
 1
@@ -452,6 +458,32 @@ NIL
 NIL
 NIL
 1
+
+MONITOR
+115
+205
+337
+250
+number of destinations completed
+num-complete
+17
+1
+11
+
+SLIDER
+75
+320
+247
+353
+spawn-prob-all
+spawn-prob-all
+0.01
+0.05
+0.04
+0.01
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -785,6 +817,14 @@ setup
 repeat 180 [ go ]
 @#$#@#$#@
 @#$#@#$#@
+<experiments>
+  <experiment name="experiment" repetitions="50" runMetricsEveryStep="false">
+    <setup>setup</setup>
+    <go>go</go>
+    <metric>num-complete</metric>
+    <steppedValueSet variable="spawn-prob-all" first="0.01" step="0.01" last="0.04"/>
+  </experiment>
+</experiments>
 @#$#@#$#@
 @#$#@#$#@
 default
