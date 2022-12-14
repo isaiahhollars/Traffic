@@ -1,7 +1,7 @@
 globals [
 radius
 num-complete
-
+;spawn-prob-all
  ;spawn probabilities for each tick
  north-spawn-prob
  west-spawn-prob
@@ -21,10 +21,10 @@ to setup
   set num-complete 0
   set stopping-distance 5
   set radius 50
-  set north-spawn-prob 0.03
-  set west-spawn-prob 0.03
-  set south-spawn-prob 0.03
-  set east-spawn-prob 0.03
+  set north-spawn-prob spawn-prob-all
+  set west-spawn-prob spawn-prob-all
+  set south-spawn-prob spawn-prob-all
+  set east-spawn-prob spawn-prob-all
 
   ;setup procedures
   setup-road
@@ -341,6 +341,21 @@ num-complete
 17
 1
 11
+
+SLIDER
+95
+180
+267
+213
+spawn-prob-all
+spawn-prob-all
+0.01
+0.05
+0.04
+0.01
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -674,6 +689,14 @@ setup
 repeat 180 [ go ]
 @#$#@#$#@
 @#$#@#$#@
+<experiments>
+  <experiment name="experiment" repetitions="50" runMetricsEveryStep="false">
+    <setup>setup</setup>
+    <go>go</go>
+    <metric>num-complete</metric>
+    <steppedValueSet variable="spawn-prob-all" first="0.01" step="0.01" last="0.04"/>
+  </experiment>
+</experiments>
 @#$#@#$#@
 @#$#@#$#@
 default

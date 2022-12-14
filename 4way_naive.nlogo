@@ -1,6 +1,7 @@
 globals [
 num-complete
 queue ; stores the order that cars arrive at intersection
+  ;spawn-prob-all
 
  ;spawn probabilities for each tick
  north-spawn-prob
@@ -8,6 +9,7 @@ queue ; stores the order that cars arrive at intersection
  south-spawn-prob
  east-spawn-prob
  stopping-distance
+
 ]
 
 turtles-own [
@@ -22,10 +24,10 @@ to setup
   set queue []
   set num-complete 0
   set stopping-distance 5
-  set north-spawn-prob 0.04
-  set west-spawn-prob 0.04
-  set south-spawn-prob 0.04
-  set east-spawn-prob 0.04
+  set north-spawn-prob spawn-prob-all
+  set west-spawn-prob spawn-prob-all
+  set south-spawn-prob spawn-prob-all
+  set east-spawn-prob spawn-prob-all
 
   ;setup procedures
   setup-road
@@ -35,6 +37,7 @@ end
 
 
 to go
+  if ticks > 5000 [stop]
   spawn-turtles
   ask turtles[turtle-go]
   tick
@@ -267,6 +270,21 @@ NIL
 NIL
 NIL
 1
+
+SLIDER
+55
+175
+227
+208
+spawn-prob-all
+spawn-prob-all
+0.01
+0.05
+0.04
+0.01
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -600,6 +618,14 @@ setup
 repeat 180 [ go ]
 @#$#@#$#@
 @#$#@#$#@
+<experiments>
+  <experiment name="destinations" repetitions="50" runMetricsEveryStep="false">
+    <setup>setup</setup>
+    <go>go</go>
+    <metric>num-complete</metric>
+    <steppedValueSet variable="spawn-prob-all" first="0.01" step="0.01" last="0.04"/>
+  </experiment>
+</experiments>
 @#$#@#$#@
 @#$#@#$#@
 default
