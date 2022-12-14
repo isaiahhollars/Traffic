@@ -1,5 +1,6 @@
 globals [
   ;spawn probabilities for each tick
+  ;spawn-prob-all
  north-spawn-prob
  west-spawn-prob
  south-spawn-prob
@@ -19,10 +20,10 @@ turtles-own [
 to setup
   clear-all
   set stopping-distance 5
-  set north-spawn-prob 0.03
-  set west-spawn-prob 0.03
-  set south-spawn-prob 0.03
-  set east-spawn-prob 0.03
+  set north-spawn-prob spawn-prob-all
+  set west-spawn-prob spawn-prob-all
+  set south-spawn-prob spawn-prob-all
+  set east-spawn-prob spawn-prob-all
 
   ;setup procedures
   setup-road
@@ -32,6 +33,7 @@ end
 
 
 to go
+  if ticks > 5000 [stop]
   spawn-turtles
   ask turtles[turtle-go]
   tick
@@ -230,8 +232,8 @@ GRAPHICS-WINDOW
 1
 1
 0
-1
-1
+0
+0
 1
 -100
 100
@@ -244,10 +246,10 @@ ticks
 30.0
 
 BUTTON
-57
-55
-123
-88
+29
+44
+95
+77
 NIL
 setup
 NIL
@@ -261,10 +263,10 @@ NIL
 1
 
 BUTTON
-80
-119
-143
-152
+105
+46
+168
+79
 NIL
 go
 T
@@ -278,10 +280,10 @@ NIL
 1
 
 BUTTON
-202
-71
-265
-104
+65
+148
+128
+181
 step
 go
 NIL
@@ -293,6 +295,21 @@ NIL
 NIL
 NIL
 1
+
+SLIDER
+61
+294
+233
+327
+spawn-prob-all
+spawn-prob-all
+0.01
+0.05
+0.03
+0.01
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
