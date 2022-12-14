@@ -460,10 +460,10 @@ NIL
 1
 
 MONITOR
-115
-205
-337
-250
+20
+135
+242
+180
 number of destinations completed
 num-complete
 17
@@ -471,10 +471,10 @@ num-complete
 11
 
 SLIDER
-75
-320
-247
-353
+40
+210
+212
+243
 spawn-prob-all
 spawn-prob-all
 0.01

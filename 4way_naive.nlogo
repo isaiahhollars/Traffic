@@ -194,13 +194,13 @@ to-report exit-heading ; turtle calulate exit heading based on exit number and s
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-365
-70
-775
-481
+307
+35
+810
+539
 -1
 -1
-2.0
+2.463
 1
 10
 1
@@ -285,6 +285,17 @@ spawn-prob-all
 1
 NIL
 HORIZONTAL
+
+MONITOR
+60
+220
+217
+265
+Completed Destinations
+num-complete
+17
+1
+11
 
 @#$#@#$#@
 ## WHAT IS IT?

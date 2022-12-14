@@ -263,10 +263,10 @@ NIL
 1
 
 BUTTON
-105
-46
-168
-79
+101
+44
+164
+77
 NIL
 go
 T
@@ -280,10 +280,10 @@ NIL
 1
 
 BUTTON
-65
-148
-128
-181
+106
+96
+169
+129
 step
 go
 NIL
@@ -297,19 +297,30 @@ NIL
 1
 
 SLIDER
-61
-294
-233
-327
+24
+247
+196
+280
 spawn-prob-all
 spawn-prob-all
 0.01
 0.05
-0.03
+0.04
 0.01
 1
 NIL
 HORIZONTAL
+
+MONITOR
+25
+195
+186
+240
+Completed Destinations
+complete
+17
+1
+11
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -657,6 +668,14 @@ NetLogo 6.2.2
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
+<experiments>
+  <experiment name="experiment" repetitions="50" runMetricsEveryStep="false">
+    <setup>setup</setup>
+    <go>go</go>
+    <metric>complete</metric>
+    <steppedValueSet variable="spawn-prob-all" first="0.01" step="0.01" last="0.04"/>
+  </experiment>
+</experiments>
 @#$#@#$#@
 @#$#@#$#@
 default
