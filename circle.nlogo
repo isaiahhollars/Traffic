@@ -21,10 +21,10 @@ to setup
   set num-complete 0
   set stopping-distance 5
   set radius 50
-  set north-spawn-prob 0.02
-  set west-spawn-prob 0.02
-  set south-spawn-prob 0.02
-  set east-spawn-prob 0.02
+  set north-spawn-prob 0.03
+  set west-spawn-prob 0.03
+  set south-spawn-prob 0.03
+  set east-spawn-prob 0.03
 
   ;setup procedures
   setup-road
@@ -37,6 +37,7 @@ to go
   spawn-turtles
   ask turtles[turtle-go]
   tick
+  if ticks >= 5000 [stop]
 end
 
 
@@ -329,6 +330,17 @@ NIL
 NIL
 NIL
 1
+
+MONITOR
+85
+225
+307
+270
+number of destinations completed
+num-complete
+17
+1
+11
 
 @#$#@#$#@
 ## WHAT IS IT?
