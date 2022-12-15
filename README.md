@@ -9,7 +9,7 @@ It is known that roundabouts are able to handle larger volumes of traffic than t
 
 ## Results
 
-Variable speed( or stop/start penalty) and realistic dimensions are important features of modeling an intersection. These should be added for further analysis. 
+Variable speed (or a stop/start penalty) and realistic dimensions are important features of modeling an intersection. These should be added for further analysis. 
 
 
 
